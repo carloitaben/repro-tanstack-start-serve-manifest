@@ -1,72 +1,26 @@
-# Welcome to TanStack.com!
+I want to programmatically create routes based on data from a remote service, such as a CMS, using the same page template for every route.
 
-This site is built with TanStack Router!
+Initially, I attempted this with virtual file routes:
 
-- [TanStack Router Docs](https://tanstack.com/router)
+```ts
+const routes = ["/", "/foo", "/bar", "/baz"]
 
-It's deployed automagically with Netlify!
-
-- [Netlify](https://netlify.com/)
-
-## Development
-
-From your terminal:
-
-```sh
-pnpm install
-pnpm dev
+export const routes = rootRoute(
+  "templates/root.tsx",
+  routes.map((path) => route(path, "templates/page.tsx")),
+)
 ```
 
-This starts your app in development mode, rebuilding assets on file changes.
+but without the `verboseFileRoutes` option, the `createFileRoute` path argument gets replaced in an infinite loop (React Router v7 solves this problem by passing an unique `id` per route).
 
-## Editing and previewing the docs of TanStack projects locally
-
-The documentations for all TanStack projects except for `React Charts` are hosted on [https://tanstack.com](https://tanstack.com), powered by this TanStack Router app.
-In production, the markdown doc pages are fetched from the GitHub repos of the projects, but in development they are read from the local file system.
-
-Follow these steps if you want to edit the doc pages of a project (in these steps we'll assume it's [`TanStack/form`](https://github.com/tanstack/form)) and preview them locally :
-
-1. Create a new directory called `tanstack`.
-
-```sh
-mkdir tanstack
+I am now trying to disable route generation and manually build the route tree. This approach works wonderfully during development but fails during builds with:
 ```
-
-2. Enter the directory and clone this repo and the repo of the project there.
-
-```sh
-cd tanstack
-git clone git@github.com:TanStack/tanstack.com.git
-git clone git@github.com:TanStack/form.git
+error during build:
+[tanstack-start:start-manifest-plugin] Could not load tanstack-start-manifest:v (imported by node_modules/.pnpm/@tanstack+start-server-core@1.133.20/node_modules/@tanstack/start-server-core/dist/esm/loadVirtualModule.js): Cannot read properties of undefined (reading 'routes')
+    at Object.handler (file:///Users/carlo/Desktop/repro-tanstack/node_modules/.pnpm/@tanstack+start-plugin-core@1.133.22_@tanstack+react-router@1.133.22_react-dom@19.2.0_react@1_nsfiuwlnjputsb7kmxgojrkhey/node_modules/@tanstack/start-plugin-core/dist/esm/start-manifest-plugin/plugin.js:59:66)
+    at Object.handler (file:///Users/carlo/Desktop/repro-tanstack/node_modules/.pnpm/vite@7.1.11_@types+node@24.9.1_jiti@2.6.1_terser@5.44.0_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:33962:13)
+    at file:///Users/carlo/Desktop/repro-tanstack/node_modules/.pnpm/rollup@4.52.5/node_modules/rollup/dist/es/shared/node-entry.js:22426:40
+    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/carlo/Desktop/repro-tanstack/node_modules/.pnpm/rollup@4.52.5/node_modules/rollup/dist/es/shared/node-entry.js:22308:28)
+    at async file:///Users/carlo/Desktop/repro-tanstack/node_modules/.pnpm/rollup@4.52.5/node_modules/rollup/dist/es/shared/node-entry.js:21308:33
+    at async Queue.work (file:///Users/carlo/Desktop/repro-tanstack/node_modules/.pnpm/rollup@4.52.5/node_modules/rollup/dist/es/shared/node-entry.js:22536:32)
 ```
-
-> [!NOTE]
-> Your `tanstack` directory should look like this:
->
-> ```
-> tanstack/
->    |
->    +-- form/
->    |
->    +-- tanstack.com/
-> ```
-
-> [!WARNING]
-> Make sure the name of the directory in your local file system matches the name of the project's repo. For example, `tanstack/form` must be cloned into `form` (this is the default) instead of `some-other-name`, because that way, the doc pages won't be found.
-
-3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
-
-```sh
-cd tanstack.com
-pnpm i
-# The app will run on https://localhost:3000 by default
-pnpm dev
-```
-
-4. Now you can visit http://localhost:3000/form/latest/docs/overview in the browser and see the changes you make in `tanstack/form/docs`.
-
-> [!NOTE]
-> The updated pages need to be manually reloaded in the browser.
-
-> [!WARNING]
-> You will need to update the `docs/config.json` file (in the project's repo) if you add a new doc page!
